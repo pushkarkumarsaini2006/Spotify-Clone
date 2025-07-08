@@ -1,0 +1,57 @@
+[
+  {
+    "folder": "Angry_(mood)",
+    "title": "Angry Mood",
+    "description": "Songs for an angry mood"
+  },
+  {
+    "folder": "Bright_(mood)",
+    "title": "Bright Mood",
+    "description": "Songs for a bright mood"
+  },
+  {
+    "folder": "Chill_(mood)",
+    "title": "Chill Mood",
+    "description": "Songs for a chill mood"
+  },
+  {
+    "folder": "cs",
+    "title": "CS Playlist",
+    "description": "Songs for coding sessions"
+  },
+  {
+    "folder": "Dark_(mood)",
+    "title": "Dark Mood",
+    "description": "Songs for a dark mood"
+  },
+  {
+    "folder": "Diljit",
+    "title": "Diljit Playlist",
+    "description": "Songs by Diljit"
+  },
+  {
+    "folder": "Funky_(mood)",
+    "title": "Funky Mood",
+    "description": "Songs for a funky mood"
+  },
+  {
+    "folder": "karan aujla",
+    "title": "Karan Aujla Playlist",
+    "description": "Songs by Karan Aujla"
+  },
+  {
+    "folder": "Love_(mood)",
+    "title": "Love Mood",
+    "description": "Songs for a loving mood"
+  },
+  {
+    "folder": "ncs",
+    "title": "Sleep Songs",
+    "description": "Songs for you"
+  },
+  {
+    "folder": "Uplifting_(mood)",
+    "title": "Uplifting Mood",
+    "description": "Songs for an uplifting mood"
+  }
+]
