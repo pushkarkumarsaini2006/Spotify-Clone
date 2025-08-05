@@ -99,6 +99,45 @@ Spotify-Clone/
 - **Update Logo/Icons**: Replace images in the `img/` folder
 - **Edit Styles**: Modify `css/style.css` for colors, fonts, and layout
 
+## 🔧 Troubleshooting
+
+### Recent JavaScript Improvements (Fixed Issues):
+- ✅ **Fixed 404 errors** when loading songs from `/songs/ncs/`
+- ✅ **Added error handling** for audio file loading and playback
+- ✅ **Improved playlist loading** with fallback mechanisms
+- ✅ **Enhanced console logging** for better debugging
+
+### Common Issues & Solutions:
+
+1. **Songs not playing / Audio errors**
+   - **Solution**: Run the app through a local HTTP server instead of opening the HTML file directly
+   - **Why**: Browser security policies prevent loading local audio files via `file://` protocol
+
+2. **404 errors in console**
+   - **Solution**: Ensure you're using a local server (see Installation section)
+   - **Check**: Verify all audio files exist in the correct folder paths
+
+3. **Empty playlists**
+   - **Solution**: Check if `songs/index.json` exists and contains valid JSON
+   - **Fallback**: The app now includes offline data as backup
+
+4. **Enable copy content errors**
+   - **Note**: These are harmless console messages from browser extensions
+   - **Action**: Can be safely ignored
+
+### Running with a Local Server:
+```bash
+# Python 3
+python -m http.server 8000
+# Then visit: http://localhost:8000
+
+# Node.js (if http-server is installed)
+npx http-server -p 8000
+
+# PHP
+php -S localhost:8000
+```
+
 ## 🌐 Browser Support
 
 | Browser | Supported Versions |

@@ -1,4 +1,8 @@
 {
     "title": "Just Chill",
-    "description": "Yes, Just Chill"
+    "description": "Yes, Just Chill",
+    "songs": [
+        "peaceful-melody.mp3",
+        "relaxing-tune.mp3"
+    ]
 }

@@ -1,4 +1,9 @@
 {
     "title": "Sleep Songs",
-    "description": "Songs for you"
+    "description": "Songs for you",
+    "songs": [
+        "chill-vibes.mp3",
+        "sample-song-1.mp3",
+        "sample-song-2.mp3"
+    ]
 }

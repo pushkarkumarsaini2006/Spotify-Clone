@@ -22,72 +22,29 @@ function secondsToMinutesSeconds(seconds) {
     return `${formattedMinutes}:${formattedSeconds}`;
 }
 
+// Offline-compatible function to get songs
 async function getSongs(folder) {
     currFolder = folder;
     
-    // Check if we have offline data first
-    if (typeof songsData !== 'undefined') {
-        const folderKey = folder.replace('songs/', '');
-        if (songsData[folderKey]) {
-            songs = songsData[folderKey].songs || [];
-            console.log(`Loaded ${songs.length} songs from offline data for ${folder}`);
-            
-            // Show all the songs in the playlist
-            let songUL = document.querySelector(".songList").getElementsByTagName("ul")[0]
-            songUL.innerHTML = ""
-            for (const song of songs) {
-                songUL.innerHTML = songUL.innerHTML + `<li><img class="invert" width="34" src="img/music.svg" alt="">
-                                    <div class="info">
-                                        <div> ${song.replaceAll("%20", " ")}</div>
-                                        <div>Pushkar</div>
-                                    </div>
-                                    <div class="playnow">
-                                        <span>Play Now</span>
-                                        <img class="invert" src="img/play.svg" alt="">
-                                    </div> </li>`;
-            }
-
-            // Attach an event listener to each song
-            Array.from(document.querySelector(".songList").getElementsByTagName("li")).forEach(e => {
-                e.addEventListener("click", element => {
-                    playMusic(e.querySelector(".info").firstElementChild.innerHTML.trim())
-                })
-            })
-
-            return songs;
-        }
-    }
-    
-    // Fallback to server-based loading
-    try {
-        // Try to get songs from info.json first
-        let infoResponse = await fetch(`/${folder}/info.json`);
-        if (infoResponse.ok) {
-            let info = await infoResponse.json();
-            if (info.songs && info.songs.length > 0) {
-                songs = info.songs;
+    // Check if we have offline data
+    if (typeof songsData !== 'undefined' && songsData[folder.replace('songs/', '')]) {
+        const folderData = songsData[folder.replace('songs/', '')];
+        songs = folderData.songs || [];
+        console.log(`Loaded ${songs.length} songs from offline data for ${folder}`);
+    } else {
+        // Try to fetch from server (for when running with a server)
+        try {
+            let infoResponse = await fetch(`/${folder}/info.json`);
+            if (infoResponse.ok) {
+                let info = await infoResponse.json();
+                songs = info.songs || [];
             } else {
-                // Fallback to empty array if no songs in manifest
-                songs = [];
+                throw new Error('No server available');
             }
-        } else {
-            // Fallback: try the old method if info.json doesn't exist
-            let a = await fetch(`/${folder}/`)
-            let response = await a.text();
-            let div = document.createElement("div")
-            div.innerHTML = response;
-            let as = div.getElementsByTagName("a")
-            songs = []
-            for (let index = 0; index < as.length; index++) {
-                const element = as[index];
-                if (element.href.endsWith(".mp3")) {
-                    songs.push(element.href.split(`/${folder}/`)[1])
-                }
-            }
+        } catch (error) {
+            console.log("Server not available, using offline mode");
+            songs = [];
         }
-    } catch (error) {
-        console.error("Error fetching songs:", error);
-        songs = [];
     }
 
     // Show all the songs in the playlist
@@ -148,13 +105,14 @@ async function displayAlbums() {
         // Try to fetch from server
         try {
             let response = await fetch(`/songs/index.json`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            if (response.ok) {
+                albums = await response.json();
+            } else {
+                throw new Error('No server available');
             }
-            albums = await response.json();
         } catch (error) {
-            console.error("Error loading albums:", error);
-            // Fallback: create some default cards for existing folders
+            console.log("Server not available, creating default albums");
+            // Fallback albums
             albums = [
                 { folder: "ncs", title: "NCS Songs", description: "No Copyright Sounds" },
                 { folder: "Chill_(mood)", title: "Chill Mood", description: "Songs for a chill mood" }
@@ -211,7 +169,9 @@ async function main() {
     // Attach an event listener to play, next and previous
     play.addEventListener("click", () => {
         if (currentSong.paused) {
-            currentSong.play()
+            currentSong.play().catch(error => {
+                console.error("Error playing audio:", error);
+            });
             play.src = "img/pause.svg"
         }
         else {
@@ -285,7 +245,6 @@ async function main() {
             currentSong.volume = .10;
             document.querySelector(".range").getElementsByTagName("input")[0].value = 10;
         }
-
     })
 }
 
