@@ -3,6 +3,11 @@ let currentSong = new Audio();
 let songs;
 let currFolder;
 
+// Get references to the player controls
+let play = document.getElementById("play");
+let previous = document.getElementById("previous");
+let next = document.getElementById("next");
+
 function secondsToMinutesSeconds(seconds) {
     if (isNaN(seconds) || seconds < 0) {
         return "00:00";
@@ -19,13 +24,42 @@ function secondsToMinutesSeconds(seconds) {
 
 async function getSongs(folder) {
     currFolder = folder;
-    // Only fetch .mp3 files if they exist (future-proofing)
-    // For now, just show a placeholder if no mp3s are found
+    let a = await fetch(`/${folder}/`)
+    let response = await a.text();
+    let div = document.createElement("div")
+    div.innerHTML = response;
+    let as = div.getElementsByTagName("a")
+    songs = []
+    for (let index = 0; index < as.length; index++) {
+        const element = as[index];
+        if (element.href.endsWith(".mp3")) {
+            songs.push(element.href.split(`/${folder}/`)[1])
+        }
+    }
+
+    // Show all the songs in the playlist
     let songUL = document.querySelector(".songList").getElementsByTagName("ul")[0]
-    songUL.innerHTML = "<li style='color:gray'>No songs found in this album. Add .mp3 files to the folder.</li>";
-    songs = [];
-    // Optionally, you can scan for mp3s if you add them later
-    return songs;
+    songUL.innerHTML = ""
+    for (const song of songs) {
+        songUL.innerHTML = songUL.innerHTML + `<li><img class="invert" width="34" src="img/music.svg" alt="">
+                            <div class="info">
+                                <div> ${song.replaceAll("%20", " ")}</div>
+                                <div>Pushkar</div>
+                            </div>
+                            <div class="playnow">
+                                <span>Play Now</span>
+                                <img class="invert" src="img/play.svg" alt="">
+                            </div> </li>`;
+    }
+
+    // Attach an event listener to each song
+    Array.from(document.querySelector(".songList").getElementsByTagName("li")).forEach(e => {
+        e.addEventListener("click", element => {
+            playMusic(e.querySelector(".info").firstElementChild.innerHTML.trim())
+        })
+    })
+
+    return songs
 }
 
 const playMusic = (track, pause = false) => {
@@ -36,8 +70,6 @@ const playMusic = (track, pause = false) => {
     }
     document.querySelector(".songinfo").innerHTML = decodeURI(track)
     document.querySelector(".songtime").innerHTML = "00:00 / 00:00"
-
-
 }
 
 async function displayAlbums() {
@@ -66,7 +98,9 @@ async function displayAlbums() {
         e.addEventListener("click", async item => {
             console.log("Fetching Songs")
             songs = await getSongs(`songs/${item.currentTarget.dataset.folder}`)  
-            playMusic(songs[0])
+            if (songs.length > 0) {
+                playMusic(songs[0])
+            }
         })
     })
 }
@@ -74,11 +108,12 @@ async function displayAlbums() {
 async function main() {
     // Get the list of all the songs
     await getSongs("songs/ncs")
-    playMusic(songs[0], true)
+    if (songs.length > 0) {
+        playMusic(songs[0], true)
+    }
 
     // Display all the albums on the page
     await displayAlbums()
-
 
     // Attach an event listener to play, next and previous
     play.addEventListener("click", () => {
@@ -159,11 +194,6 @@ async function main() {
         }
 
     })
-
-
-
-
-
 }
 
 main()
