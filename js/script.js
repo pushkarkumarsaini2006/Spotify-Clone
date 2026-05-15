@@ -22,6 +22,69 @@ function secondsToMinutesSeconds(seconds) {
     return `${formattedMinutes}:${formattedSeconds}`;
 }
 
+function createFallbackAudioUrl() {
+    const sampleRate = 44100;
+    const durationInSeconds = 1;
+    const frequency = 440;
+    const numberOfSamples = sampleRate * durationInSeconds;
+    const wavBuffer = new ArrayBuffer(44 + numberOfSamples * 2);
+    const view = new DataView(wavBuffer);
+
+    const writeString = (offset, string) => {
+        for (let index = 0; index < string.length; index++) {
+            view.setUint8(offset + index, string.charCodeAt(index));
+        }
+    };
+
+    writeString(0, "RIFF");
+    view.setUint32(4, 36 + numberOfSamples * 2, true);
+    writeString(8, "WAVE");
+    writeString(12, "fmt ");
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeString(36, "data");
+    view.setUint32(40, numberOfSamples * 2, true);
+
+    let offset = 44;
+    for (let sampleIndex = 0; sampleIndex < numberOfSamples; sampleIndex++) {
+        const time = sampleIndex / sampleRate;
+        const amplitude = Math.sin(2 * Math.PI * frequency * time) * 0.2;
+        view.setInt16(offset, amplitude * 0x7FFF, true);
+        offset += 2;
+    }
+
+    return URL.createObjectURL(new Blob([wavBuffer], { type: "audio/wav" }));
+}
+
+const fallbackAudioUrl = createFallbackAudioUrl();
+let activeTrackRequestId = 0;
+
+async function resolveTrackSource(track) {
+    const songUrl = `/${currFolder}/` + track;
+
+    if (window.location.protocol === "file:") {
+        return songUrl;
+    }
+
+    try {
+        const response = await fetch(songUrl, { cache: "no-store" });
+        const contentType = response.headers.get("content-type") || "";
+
+        if (response.ok && contentType.toLowerCase().startsWith("audio/")) {
+            return songUrl;
+        }
+    } catch (error) {
+        console.warn("Unable to validate audio source, using fallback:", error);
+    }
+
+    return fallbackAudioUrl;
+}
+
 async function getSongs(folder) {
     currFolder = folder;
     
@@ -115,25 +178,39 @@ async function getSongs(folder) {
     return songs
 }
 
-const playMusic = (track, pause = false) => {
-    // Construct the full path to the song
-    currentSong.src = `/${currFolder}/` + track
-    
-    // Add error handling for audio loading
+const playMusic = async (track, pause = false) => {
+    const requestId = ++activeTrackRequestId;
+    const resolvedSource = await resolveTrackSource(track);
+
+    if (requestId !== activeTrackRequestId) {
+        return;
+    }
+
     currentSong.onerror = function() {
+        if (currentSong.src !== fallbackAudioUrl) {
+            console.warn("Audio source failed, switching to fallback audio:", currentSong.src);
+            currentSong.src = fallbackAudioUrl;
+            if (!pause) {
+                currentSong.play().catch(error => {
+                    console.error("Error playing fallback audio:", error);
+                });
+            }
+            return;
+        }
+
         console.error("Error loading audio file:", currentSong.src);
-        alert("Error loading audio file. Please check if the file exists.");
     };
-    
+
+    currentSong.src = resolvedSource;
+    document.querySelector(".songinfo").innerHTML = decodeURI(track)
+    document.querySelector(".songtime").innerHTML = "00:00 / 00:00"
+
     if (!pause) {
         currentSong.play().catch(error => {
             console.error("Error playing audio:", error);
-            alert("Error playing audio. Please try again.");
         });
         play.src = "img/pause.svg"
     }
-    document.querySelector(".songinfo").innerHTML = decodeURI(track)
-    document.querySelector(".songtime").innerHTML = "00:00 / 00:00"
 }
 
 async function displayAlbums() {
