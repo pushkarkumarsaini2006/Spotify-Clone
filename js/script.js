@@ -95,14 +95,14 @@ async function getSongs(folder) {
             let songUL = document.querySelector(".songList").getElementsByTagName("ul")[0]
             songUL.innerHTML = ""
             for (const song of songs) {
-                songUL.innerHTML = songUL.innerHTML + `<li><img class="invert" width="34" src="img/music.svg" alt="">
+                songUL.innerHTML = songUL.innerHTML + `<li><img class="invert" width="34" height="34" src="img/music.svg" alt="Song icon">
                                     <div class="info">
                                         <div> ${song.replaceAll("%20", " ")}</div>
                                         <div>Pushkar</div>
                                     </div>
                                     <div class="playnow">
                                         <span>Play Now</span>
-                                        <img class="invert" src="img/play.svg" alt="">
+                                        <img width="24" height="24" class="invert" src="img/play.svg" alt="Play this song">
                                     </div> </li>`;
             }
 
@@ -153,14 +153,14 @@ async function getSongs(folder) {
     let songUL = document.querySelector(".songList").getElementsByTagName("ul")[0]
     songUL.innerHTML = ""
     for (const song of songs) {
-        songUL.innerHTML = songUL.innerHTML + `<li><img class="invert" width="34" src="img/music.svg" alt="">
+        songUL.innerHTML = songUL.innerHTML + `<li><img class="invert" width="34" height="34" src="img/music.svg" alt="Song icon">
                             <div class="info">
                                 <div> ${song.replaceAll("%20", " ")}</div>
                                 <div>Pushkar</div>
                             </div>
                             <div class="playnow">
                                 <span>Play Now</span>
-                                <img class="invert" src="img/play.svg" alt="">
+                                <img width="24" height="24" class="invert" src="img/play.svg" alt="Play this song">
                             </div> </li>`;
     }
 
@@ -218,6 +218,7 @@ async function displayAlbums() {
     cardContainer.innerHTML = "";
     
     for (const album of albums) {
+        const isFirstAlbum = albums.indexOf(album) === 0;
         cardContainer.innerHTML += ` <div data-folder="${album.folder}" class="card">
             <div class="play">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
@@ -226,7 +227,7 @@ async function displayAlbums() {
                         stroke-linejoin="round" />
                 </svg>
             </div>
-            <img src="/songs/${album.folder}/cover.jpg" alt="">
+            <img width="200" height="200" ${isFirstAlbum ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async" src="/songs/${album.folder}/cover.jpg" alt="${album.title} cover art">
             <h2>${album.title}</h2>
             <p>${album.description}</p>
         </div>`
