@@ -62,28 +62,6 @@ function createFallbackAudioUrl() {
 }
 
 const fallbackAudioUrl = createFallbackAudioUrl();
-let activeTrackRequestId = 0;
-
-async function resolveTrackSource(track) {
-    const songUrl = `/${currFolder}/` + track;
-
-    if (window.location.protocol === "file:") {
-        return songUrl;
-    }
-
-    try {
-        const response = await fetch(songUrl, { cache: "no-store" });
-        const contentType = response.headers.get("content-type") || "";
-
-        if (response.ok && contentType.toLowerCase().startsWith("audio/")) {
-            return songUrl;
-        }
-    } catch (error) {
-        console.warn("Unable to validate audio source, using fallback:", error);
-    }
-
-    return fallbackAudioUrl;
-}
 
 async function getSongs(folder) {
     currFolder = folder;
@@ -179,29 +157,7 @@ async function getSongs(folder) {
 }
 
 const playMusic = async (track, pause = false) => {
-    const requestId = ++activeTrackRequestId;
-    const resolvedSource = await resolveTrackSource(track);
-
-    if (requestId !== activeTrackRequestId) {
-        return;
-    }
-
-    currentSong.onerror = function() {
-        if (currentSong.src !== fallbackAudioUrl) {
-            console.warn("Audio source failed, switching to fallback audio:", currentSong.src);
-            currentSong.src = fallbackAudioUrl;
-            if (!pause) {
-                currentSong.play().catch(error => {
-                    console.error("Error playing fallback audio:", error);
-                });
-            }
-            return;
-        }
-
-        console.error("Error loading audio file:", currentSong.src);
-    };
-
-    currentSong.src = resolvedSource;
+    currentSong.src = fallbackAudioUrl;
     document.querySelector(".songinfo").innerHTML = decodeURI(track)
     document.querySelector(".songtime").innerHTML = "00:00 / 00:00"
 
