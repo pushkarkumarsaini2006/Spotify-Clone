@@ -24,11 +24,17 @@ function secondsToMinutesSeconds(seconds) {
 
 function createFallbackAudioUrl() {
     const sampleRate = 44100;
-    const durationInSeconds = 1;
-    const frequency = 440;
+    const durationInSeconds = 8;
     const numberOfSamples = sampleRate * durationInSeconds;
     const wavBuffer = new ArrayBuffer(44 + numberOfSamples * 2);
     const view = new DataView(wavBuffer);
+    const notes = [
+        261.63, 329.63, 392.00, 523.25,
+        392.00, 329.63, 293.66, 261.63,
+        261.63, 293.66, 329.63, 392.00,
+        329.63, 261.63, 246.94, 220.00
+    ];
+    const noteDuration = durationInSeconds / notes.length;
 
     const writeString = (offset, string) => {
         for (let index = 0; index < string.length; index++) {
@@ -50,11 +56,23 @@ function createFallbackAudioUrl() {
     writeString(36, "data");
     view.setUint32(40, numberOfSamples * 2, true);
 
+    const clamp = value => Math.max(-1, Math.min(1, value));
+
     let offset = 44;
     for (let sampleIndex = 0; sampleIndex < numberOfSamples; sampleIndex++) {
         const time = sampleIndex / sampleRate;
-        const amplitude = Math.sin(2 * Math.PI * frequency * time) * 0.2;
-        view.setInt16(offset, amplitude * 0x7FFF, true);
+        const noteIndex = Math.floor(time / noteDuration) % notes.length;
+        const noteTime = time % noteDuration;
+        const frequency = notes[noteIndex];
+        const attack = Math.min(1, noteTime / 0.03);
+        const release = Math.min(1, (noteDuration - noteTime) / 0.08);
+        const envelope = Math.min(attack, release);
+        const lead = Math.sin(2 * Math.PI * frequency * time);
+        const harmony = Math.sin(2 * Math.PI * frequency * 0.5 * time) * 0.25;
+        const sparkle = Math.sin(2 * Math.PI * frequency * 2 * time) * 0.15;
+        const bass = Math.sin(2 * Math.PI * (frequency / 2) * time) * 0.2;
+        const sample = clamp((lead * 0.55 + harmony + sparkle + bass) * envelope * 0.85);
+        view.setInt16(offset, sample * 0x7FFF, true);
         offset += 2;
     }
 
@@ -158,6 +176,7 @@ async function getSongs(folder) {
 
 const playMusic = async (track, pause = false) => {
     currentSong.src = fallbackAudioUrl;
+    currentSong.loop = true;
     document.querySelector(".songinfo").innerHTML = decodeURI(track)
     document.querySelector(".songtime").innerHTML = "00:00 / 00:00"
 
